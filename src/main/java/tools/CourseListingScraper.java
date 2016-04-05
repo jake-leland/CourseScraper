@@ -2,6 +2,7 @@ package tools;
 
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.*;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.FileWriter;
@@ -13,7 +14,8 @@ public class CourseListingScraper {
             webClient.getOptions().setThrowExceptionOnFailingStatusCode(false); // because Howdy has problems
             webClient.getOptions().setThrowExceptionOnScriptError(false); // because Howdy has problems
 
-            JSONObject tamuJson = new JSONObject();
+            //JSONObject tamuJson = new JSONObject();
+            JSONArray subjects = new JSONArray();
 
             // Howdy Login
             HtmlPage page = webClient.getPage("https://howdy.tamu.edu/");
@@ -74,6 +76,7 @@ public class CourseListingScraper {
                     boolean skip2 = true;
 
                     String section = "";
+                    int classes = 0;
                     JSONObject sectionJson = new JSONObject();
                     for (HtmlTableRow sectionRow : sectionTable.getRows()) {
                         if (skip1) {
@@ -94,6 +97,10 @@ public class CourseListingScraper {
                             section = sectionCells.get(4).getTextContent();
                             sectionJson = new JSONObject();
 
+                            sectionJson.put("subject", subject);
+                            sectionJson.put("course", course);
+                            sectionJson.put("section", section);
+
                             sectionJson.put("select", sectionCells.get(0).getTextContent());
                             sectionJson.put("crn", sectionCells.get(1).getTextContent());
                             sectionJson.put("campus", sectionCells.get(5).getTextContent());
@@ -102,6 +109,8 @@ public class CourseListingScraper {
                             sectionJson.put("capacity", sectionCells.get(10).getTextContent());
                             sectionJson.put("active", sectionCells.get(11).getTextContent());
                             sectionJson.put("remaining", sectionCells.get(12).getTextContent());
+
+                            classes = 1;
                         }
                         sectionJson.append("days", sectionCells.get(8).getTextContent());
                         sectionJson.append("time", sectionCells.get(9).getTextContent());
@@ -109,16 +118,26 @@ public class CourseListingScraper {
                         sectionJson.append("date (mm/dd)", sectionCells.get(14).getTextContent());
                         sectionJson.append("location", sectionCells.get(15).getTextContent());
 
+                        sectionJson.put("classes", classes++);
+
                         //JSONObject sectionJson = new JSONObject().put(lastSection, lastJson);
                         courseJson.put(section, sectionJson);
                         //courseJson.getJSONArray(courseRow.getCells().get(1).getTextContent()).put(lastIndex,sectionJson);
                     }
                     subjectJson.put(course, courseJson);
                 }
-                tamuJson.put(subject, subjectJson);
+
+                try (FileWriter file = new FileWriter("data/subjects/" + subject + ".json")) {
+                    file.write(subjectJson.toString());
+                }
+                //tamuJson.put(subject, subjectJson);
+                subjects.put(subject);
             }
-            try (FileWriter file = new FileWriter("tamu.json")) {
-                file.write(tamuJson.toString());
+            //try (FileWriter file = new FileWriter("tamu.json")) {
+            //   file.write(tamuJson.toString());
+            //}
+            try (FileWriter file = new FileWriter("data/subjects.json")) {
+                file.write(subjects.toString());
             }
         }
     }
