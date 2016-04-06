@@ -6,6 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.FileWriter;
+import java.util.Date;
 import java.util.List;
 
 public class CourseListingScraper {
@@ -48,6 +49,10 @@ public class CourseListingScraper {
 
                 JSONObject subjectJson = new JSONObject();
 
+                JSONObject coursesJson = new JSONObject();
+
+                if (!subjectOption.getValueAttribute().equals("CSCE")) continue;
+
                 // Specific Subject
                 final HtmlPage subjectPage = subjectsForm.getInputByValue("Course Search ").click();
                 System.out.println(subjectOption.getText());
@@ -66,7 +71,7 @@ public class CourseListingScraper {
 
                     HtmlForm courseForm = (HtmlForm) courseRow.getCells().get(3).getHtmlElementsByTagName("form").get(0);
 
-                    String course = courseRow.getCells().get(1).getTextContent();
+                    JSONObject sectionsJson = new JSONObject();
 
                     // Specific section
                     final HtmlPage sectionPage = courseForm.getInputByValue("View Sections").click();
@@ -76,8 +81,8 @@ public class CourseListingScraper {
                     boolean skip2 = true;
 
                     String section = "";
-                    int classes = 0;
                     JSONObject sectionJson = new JSONObject();
+                    int classes = 0;
                     for (HtmlTableRow sectionRow : sectionTable.getRows()) {
                         if (skip1) {
                             skip1 = false;
@@ -97,12 +102,11 @@ public class CourseListingScraper {
                             section = sectionCells.get(4).getTextContent();
                             sectionJson = new JSONObject();
 
-                            sectionJson.put("subject", subject);
-                            sectionJson.put("course", course);
-                            sectionJson.put("section", section);
-
                             sectionJson.put("select", sectionCells.get(0).getTextContent());
                             sectionJson.put("crn", sectionCells.get(1).getTextContent());
+                            sectionJson.put("subject", sectionCells.get(2).getTextContent());
+                            sectionJson.put("course", sectionCells.get(3).getTextContent());
+                            sectionJson.put("section", section);
                             sectionJson.put("campus", sectionCells.get(5).getTextContent());
                             sectionJson.put("credits", sectionCells.get(6).getTextContent());
                             sectionJson.put("title", sectionCells.get(7).getTextContent().substring(0, sectionCells.get(7).getTextContent().indexOf('\n')));
@@ -120,22 +124,23 @@ public class CourseListingScraper {
 
                         sectionJson.put("classes", classes++);
 
-                        //JSONObject sectionJson = new JSONObject().put(lastSection, lastJson);
-                        courseJson.put(section, sectionJson);
-                        //courseJson.getJSONArray(courseRow.getCells().get(1).getTextContent()).put(lastIndex,sectionJson);
+                        sectionsJson.put(section, sectionJson);
                     }
-                    subjectJson.put(course, courseJson);
+                    courseJson.put("sections", sectionsJson);
+                    courseJson.put("title", courseRow.getCells().get(2).getTextContent());
+
+                    coursesJson.put(courseRow.getCells().get(1).getTextContent(), courseJson);
                 }
+
+                subjectJson.put("courses", coursesJson);
+                subjectJson.put("title", subjectOption.getText());
+                subjectJson.put("updated", new Date());
 
                 try (FileWriter file = new FileWriter("data/subjects/" + subject + ".json")) {
                     file.write(subjectJson.toString());
                 }
-                //tamuJson.put(subject, subjectJson);
                 subjects.put(subject);
             }
-            //try (FileWriter file = new FileWriter("tamu.json")) {
-            //   file.write(tamuJson.toString());
-            //}
             try (FileWriter file = new FileWriter("data/subjects.json")) {
                 file.write(subjects.toString());
             }
