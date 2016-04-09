@@ -6,6 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.FileWriter;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -50,8 +51,6 @@ public class CourseListingScraper {
                 JSONObject subjectJson = new JSONObject();
 
                 JSONObject coursesJson = new JSONObject();
-
-                if (!subjectOption.getValueAttribute().equals("CSCE")) continue;
 
                 // Specific Subject
                 final HtmlPage subjectPage = subjectsForm.getInputByValue("Course Search ").click();
@@ -134,7 +133,7 @@ public class CourseListingScraper {
 
                 subjectJson.put("courses", coursesJson);
                 subjectJson.put("title", subjectOption.getText());
-                subjectJson.put("updated", new Date());
+                subjectJson.put("updated", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()));
 
                 try (FileWriter file = new FileWriter("data/subjects/" + subject + ".json")) {
                     file.write(subjectJson.toString());
