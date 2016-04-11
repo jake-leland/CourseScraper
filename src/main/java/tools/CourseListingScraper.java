@@ -94,14 +94,14 @@ public class CourseListingScraper {
 
                         List<HtmlTableCell> sectionCells = sectionRow.getCells();
 
-                        if (!sectionCells.get(0).getTextContent().equals(" ")) {
+                        if (!sectionCells.get(1).getTextContent().equals(" ")) {
                             //String subject = sectionCells.get(2).getTextContent();
                             //String course = sectionCells.get(3).getTextContent();
 
                             section = sectionCells.get(4).getTextContent();
                             sectionJson = new JSONObject();
 
-                            sectionJson.put("select", sectionCells.get(0).getTextContent());
+                            sectionJson.put("select", (sectionCells.get(0).getTextContent().equals("C") ? "C" : "SR"));
                             sectionJson.put("crn", sectionCells.get(1).getTextContent());
                             sectionJson.put("subject", sectionCells.get(2).getTextContent());
                             sectionJson.put("course", sectionCells.get(3).getTextContent());
@@ -133,7 +133,7 @@ public class CourseListingScraper {
 
                 subjectJson.put("courses", coursesJson);
                 subjectJson.put("title", subjectOption.getText());
-                subjectJson.put("updated", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()));
+                subjectJson.put("updated", new SimpleDateFormat("EEE, d MMM yyyy 'at' hh:mm aa").format(new Date()));
 
                 try (FileWriter file = new FileWriter("data/subjects/" + subject + ".json")) {
                     file.write(subjectJson.toString());
