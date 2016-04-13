@@ -133,7 +133,7 @@ public class CourseListingScraper {
 
                 subjectJson.put("courses", coursesJson);
                 subjectJson.put("title", subjectOption.getText());
-                subjectJson.put("updated", new SimpleDateFormat("EEE, d MMM yyyy 'at' hh:mm aa").format(new Date()));
+                subjectJson.put("updated", new SimpleDateFormat("EEE, MMM d yyyy 'at' hh:mm aa").format(new Date()));
 
                 try (FileWriter file = new FileWriter("data/subjects/" + subject + ".json")) {
                     file.write(subjectJson.toString());
