@@ -1,0 +1,83 @@
+{
+  "data": {
+    "subjects": {
+      "ACCT": {
+        "courses": {
+          "209": {
+            "title": "SURVEY OF ACCT PRIN",
+            "sections": {
+              "501": {
+                "select": "C",
+                "subject": "ACCT",
+                "campus": "CS",
+                "classes": 5,
+                "active": "430",
+                "section": "501",
+                "title": "SURVEY OF ACCT PRIN",
+                "remaining": "0",
+                "capacity": "430",
+                "instructor": [
+                  "Mary K. Stasny (P)",
+                  "Mary K. Stasny (P)",
+                  "Mary K. Stasny (P)",
+                  "Mary K. Stasny (P)",
+                  "Mary K. Stasny (P)"
+                ],
+                "credits": "3",
+                "course": "209",
+                "days": [
+                  "T",
+                  "R",
+                  "R",
+                  "R",
+                  "T"
+                ],
+                "date (mm/dd)": [
+                  "08/29-12/14",
+                  "09/29-09/29",
+                  "10/20-10/20",
+                  "11/17-11/17",
+                  "12/13-12/13"
+                ],
+                "location": [
+                  "WCBA 113",
+                  "TBA",
+                  "TBA",
+                  "TBA",
+                  "TBA"
+                ],
+                "time": [
+                  "08:00 am-09:15 am",
+                  "07:15 pm-09:00 pm",
+                  "07:15 pm-09:00 pm",
+                  "07:15 pm-09:00 pm",
+                  "06:00 pm-08:00 pm"
+                ],
+                "crn": "10001"
+              }
+              /* more sections */
+            },
+            "history": {
+              "20151": {
+                "Stasny": {
+                  "A": 1,
+                  "B": 1,
+                  "C": 1,
+                  "D": 1,
+                  "F": 1,
+                  "Q": 1
+                }
+                /* more profs */
+              }
+              /* more semesters */
+            }
+          }
+          /* more courses */
+        },
+        "title": "ACCT - Accounting",
+        "updated": "Fri, Apr 22 2016 at 10:00 AM"
+      }
+      /* more subjects */
+    }
+  }
+}

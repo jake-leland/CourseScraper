@@ -17,7 +17,12 @@
         <dependency>
             <groupId>net.sourceforge.htmlunit</groupId>
             <artifactId>htmlunit</artifactId>
-            <version>2.20</version>
+            <version>LATEST</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>LATEST</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
