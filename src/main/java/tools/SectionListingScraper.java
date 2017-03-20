@@ -68,7 +68,8 @@ public class SectionListingScraper {
 
                     JSONObject courseJson = new JSONObject();
 
-                    HtmlForm courseForm = (HtmlForm) courseRow.getCells().get(3).getHtmlElementsByTagName("form").get(0);
+//                    HtmlForm courseForm = (HtmlForm) courseRow.getCells().get(3).getHtmlElementsByTagName("form").get(0);
+                    HtmlForm courseForm = (HtmlForm) courseRow.getCells().get(3).getElementsByTagName("form").get(0);
 
                     JSONObject sectionsJson = new JSONObject();
 
