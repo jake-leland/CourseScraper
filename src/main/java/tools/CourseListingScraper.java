@@ -40,12 +40,13 @@ public class CourseListingScraper {
             HtmlForm termForm = page.getForms().get(1);
             HtmlSelect termSelect = termForm.getSelectByName("p_term");
             System.out.println("\nSELECT TERM:");
-            for (int i = 0; i < termSelect.getOptions().size(); i++) {
+            for (int i = 0; i < termSelect.getOptionSize(); i++) {
                 HtmlOption t = termSelect.getOption(i);
                 System.out.println("[" + i + "]" + t.getText() + " " + t.getValueAttribute());
             }
             int choice = kb.nextInt();
             HtmlOption currentTerm = termSelect.getOption(choice);
+            termSelect.setSelectedIndex(choice);
             String term = currentTerm.getValueAttribute();
             String termTitle = currentTerm.getText();
 
@@ -62,8 +63,9 @@ public class CourseListingScraper {
             HtmlForm subjectsForm = page.getForms().get(1);
             HtmlSelect subjectsSelect = subjectsForm.getSelectByName("sel_subj");
 
-            for (HtmlOption subjectOption : subjectsSelect.getOptions()) {
-                subjectsSelect.setSelectedIndex(subjectOption.getIndex() / 2);
+            for (int i = 0; i < subjectsSelect.getOptionSize(); i++) {
+                HtmlOption subjectOption = subjectsSelect.getOption(i);
+                subjectsSelect.setSelectedIndex(i);
 
                 JSONArray specificCourses = new JSONArray();
 
