@@ -70,7 +70,7 @@ public class CourseListingScraper {
                 JSONArray specificCourses = new JSONArray();
 
                 // Specific Subject
-                final HtmlPage subjectPage = subjectsForm.getInputByValue("Course Search ").click();
+                final HtmlPage subjectPage = subjectsForm.getInputByValue("Course Search").click();
 
                 JSONObject subjectJson = new JSONObject();
 

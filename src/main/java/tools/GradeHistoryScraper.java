@@ -41,35 +41,55 @@ public class GradeHistoryScraper {
                             String college = collegeOption.getValueAttribute();
                             if (!college.equals("UT")) { // skip university totals
                                 String pdfFile = "http://web-as.tamu.edu/gradereport/PDFReports/" + year + semester + "/grd" + year + semester + college + ".pdf";
+                                System.out.print(pdfFile);
                                 try {
                                     String txtFile = downloadTxt(pdfFile);
-                                    System.out.println(pdfFile + " > " + txtFile);
+                                    System.out.print(" > " + txtFile);
                                     JSONObject grades = makeJson(txtFile);
 
                                     String jsonFile = txtFile.replace("txt", "json");
                                     try (FileWriter file = new FileWriter(jsonFile)) {
                                         file.write(grades.toString());
                                     }
-                                    System.out.println(txtFile + " > " + jsonFile);
+                                    System.out.print(" > " + jsonFile);
 
                                     mergeJson(termGrades, grades);
                                 } catch (FileNotFoundException e) {
-                                    System.out.println(pdfFile + " > not found");
+                                    System.out.print(" > not found");
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
+                                System.out.println();
                             }
                         }
 
                         System.out.println("POSTING TERM: " + year + semester);
+
+                        WebRequest requestSettings = new WebRequest(new URL("https://aggie-scheduler.mybluemix.net/api/grades"), HttpMethod.POST);
+//                        WebRequest requestSettings = new WebRequest(new URL("http://localhost:3000/api/grades"), HttpMethod.POST);
+
+                        int counter = 0;
+                        JSONObject termGradesSubset = new JSONObject();
                         for (String course : termGrades.keySet()) {
-                            WebRequest requestSettings = new WebRequest(
-                                    new URL("http://localhost:3000/api/grades"), HttpMethod.POST);
-//                                        new URL("https://aggie-scheduler.mybluemix.net/api/grades"), HttpMethod.POST);
+                            termGradesSubset.put(course, termGrades.getJSONObject(course));
+
+                            if (++counter == 100) {
+                                requestSettings.setRequestParameters(new ArrayList());
+                                requestSettings.getRequestParameters().add(new NameValuePair("term", "" + year + semester));
+                                requestSettings.getRequestParameters().add(new NameValuePair("termGrades", termGradesSubset.toString()));
+                                webClient.getPage(requestSettings);
+
+                                counter = 0;
+                                termGradesSubset = new JSONObject();
+
+                                Thread.sleep(1000);
+                            }
+                        }
+
+                        if (counter > 0) {
                             requestSettings.setRequestParameters(new ArrayList());
                             requestSettings.getRequestParameters().add(new NameValuePair("term", "" + year + semester));
-                            requestSettings.getRequestParameters().add(new NameValuePair("course", course));
-                            requestSettings.getRequestParameters().add(new NameValuePair("grades", termGrades.get(course).toString()));
+                            requestSettings.getRequestParameters().add(new NameValuePair("termGrades", termGradesSubset.toString()));
                             webClient.getPage(requestSettings);
                         }
                     }
