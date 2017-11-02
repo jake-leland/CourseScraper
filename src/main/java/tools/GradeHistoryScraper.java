@@ -13,11 +13,14 @@ import org.json.JSONObject;
 
 import java.io.*;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class GradeHistoryScraper {
     public static void main(String[] args) throws Exception {
+        Scanner kb = new Scanner(System.in);
+
         try (final WebClient webClient = new WebClient()) {
             webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
             webClient.getOptions().setThrowExceptionOnScriptError(false);
@@ -27,73 +30,76 @@ public class GradeHistoryScraper {
             HtmlSelect yearSelect = (HtmlSelect) page.getElementById("ctl00_plcMain_lstGradYear");
             HtmlSelect collegeSelect = (HtmlSelect) page.getElementById("ctl00_plcMain_lstGradCollege");
 
-            for (HtmlOption yearOption : yearSelect.getOptions()) {
-                int year = Integer.parseInt(yearOption.getValueAttribute());
-//                if (year >= 2009) {
-                if (year == 2016) {
-//                    for (int semester = 1; semester <= 3; semester++) {
-                    {
-                        int semester = 1;
+            System.out.println("\nSELECT TERM:");
+            for (int i = 0; i < yearSelect.getOptionSize() * 3; i += 3) {
+                HtmlOption t = yearSelect.getOption(i / 3);
+                System.out.println("[" + i + "] " + t.getText() + " Spring");
+                System.out.println("[" + (i + 1) + "] " + t.getText() + " Summer");
+                System.out.println("[" + (i + 2) + "] " + t.getText() + " Fall");
+            }
 
-                        JSONObject termGrades = new JSONObject();
+            int choice = kb.nextInt();
+            int year = Integer.parseInt(yearSelect.getOption(choice / 3).getValueAttribute());
+            int semester = (choice % 3) + 1;
 
-                        for (HtmlOption collegeOption : collegeSelect.getOptions()) {
-                            String college = collegeOption.getValueAttribute();
-                            if (!college.equals("UT")) { // skip university totals
-                                String pdfFile = "http://web-as.tamu.edu/gradereport/PDFReports/" + year + semester + "/grd" + year + semester + college + ".pdf";
-                                System.out.print(pdfFile);
-                                try {
-                                    String txtFile = downloadTxt(pdfFile);
-                                    System.out.print(" > " + txtFile);
-                                    JSONObject grades = makeJson(txtFile);
+            JSONObject termGrades = new JSONObject();
 
-                                    String jsonFile = txtFile.replace("txt", "json");
-                                    try (FileWriter file = new FileWriter(jsonFile)) {
-                                        file.write(grades.toString());
-                                    }
-                                    System.out.print(" > " + jsonFile);
+            for (HtmlOption collegeOption : collegeSelect.getOptions()) {
+                String college = collegeOption.getValueAttribute();
+                if (!college.equals("UT")) { // skip university totals
+                    String pdfFile = "http://web-as.tamu.edu/gradereport/PDFReports/" + year + semester + "/grd" + year + semester + college + ".pdf";
+                    System.out.print(pdfFile);
+                    try {
+                        String txtFile = downloadTxt(pdfFile);
+                        System.out.print(" > " + txtFile);
+                        JSONObject grades = makeJson(txtFile);
 
-                                    mergeJson(termGrades, grades);
-                                } catch (FileNotFoundException e) {
-                                    System.out.print(" > not found");
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                                System.out.println();
-                            }
+                        String jsonFile = txtFile.replace("txt", "json");
+                        try (FileWriter file = new FileWriter(jsonFile)) {
+                            file.write(grades.toString());
                         }
+                        System.out.print(" > " + jsonFile);
 
-                        System.out.println("POSTING TERM: " + year + semester);
-
-                        WebRequest requestSettings = new WebRequest(new URL("https://aggie-scheduler.mybluemix.net/api/grades"), HttpMethod.POST);
-//                        WebRequest requestSettings = new WebRequest(new URL("http://localhost:3000/api/grades"), HttpMethod.POST);
-
-                        int counter = 0;
-                        JSONObject termGradesSubset = new JSONObject();
-                        for (String course : termGrades.keySet()) {
-                            termGradesSubset.put(course, termGrades.getJSONObject(course));
-
-                            if (++counter == 100) {
-                                requestSettings.setRequestParameters(new ArrayList());
-                                requestSettings.getRequestParameters().add(new NameValuePair("term", "" + year + semester));
-                                requestSettings.getRequestParameters().add(new NameValuePair("termGrades", termGradesSubset.toString()));
-                                webClient.getPage(requestSettings);
-
-                                counter = 0;
-                                termGradesSubset = new JSONObject();
-
-                                Thread.sleep(1000);
-                            }
-                        }
-
-                        if (counter > 0) {
-                            requestSettings.setRequestParameters(new ArrayList());
-                            requestSettings.getRequestParameters().add(new NameValuePair("term", "" + year + semester));
-                            requestSettings.getRequestParameters().add(new NameValuePair("termGrades", termGradesSubset.toString()));
-                            webClient.getPage(requestSettings);
-                        }
+                        mergeJson(termGrades, grades);
+                    } catch (FileNotFoundException e) {
+                        System.out.print(" > not found");
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
+                    System.out.println();
                 }
+            }
+
+            System.out.println("POSTING TERM: " + year + semester);
+
+//            WebRequest requestSettings = new WebRequest(new URL("https://aggie-scheduler.mybluemix.net/api/grades"), HttpMethod.POST);
+            WebRequest requestSettings = new WebRequest(new URL("http://localhost:3000/api/grades"), HttpMethod.POST);
+
+            int counter = 0;
+            JSONObject termGradesSubset = new JSONObject();
+            for (String course : termGrades.keySet()) {
+                termGradesSubset.put(course, termGrades.getJSONObject(course));
+
+                if (++counter == 10) {
+                    System.out.print(".");
+                    requestSettings.setRequestParameters(new ArrayList());
+                    requestSettings.getRequestParameters().add(new NameValuePair("term", "" + year + semester));
+                    requestSettings.getRequestParameters().add(new NameValuePair("termGrades", encodeURIComponent(termGradesSubset.toString())));
+                    webClient.getPage(requestSettings);
+
+                    counter = 0;
+                    termGradesSubset = new JSONObject();
+
+                    Thread.sleep(1000);
+                }
+            }
+
+            if (counter > 0) {
+                System.out.print(".");
+                requestSettings.setRequestParameters(new ArrayList());
+                requestSettings.getRequestParameters().add(new NameValuePair("term", "" + year + semester));
+                requestSettings.getRequestParameters().add(new NameValuePair("termGrades", encodeURIComponent(termGradesSubset.toString())));
+                webClient.getPage(requestSettings);
             }
         }
     }
@@ -215,7 +221,7 @@ public class GradeHistoryScraper {
                 }
 
                 if (courseObj.has(instructor)) {
-                    instructorObj = courseObj.getJSONObject((instructor));
+                    instructorObj = courseObj.getJSONObject(instructor);
                 } else {
                     instructorObj = new JSONObject();
                 }
@@ -445,6 +451,25 @@ public class GradeHistoryScraper {
             } else {
                 masterJSON.put(course, addJSON.get(course));
             }
+        }
+    }
+
+    private static String encodeURIComponent(String s) {
+//        intended to match up with the JavaScript decodeURIComponent function
+//        https://stackoverflow.com/questions/607176/java-equivalent-to-javascripts-encodeuricomponent-that-produces-identical-outpu
+//        https://gist.github.com/declanqian/7892516
+
+        try {
+            return URLEncoder.encode(s, "UTF-8")
+                    .replaceAll("\\+", "%20")
+                    .replaceAll("\\%28", "(")
+                    .replaceAll("\\%29", ")")
+                    .replaceAll("\\%27", "'")
+                    .replaceAll("\\%21", "!")
+                    .replaceAll("\\%7E", "~");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return "";
         }
     }
 
