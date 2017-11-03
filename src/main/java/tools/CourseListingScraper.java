@@ -15,7 +15,11 @@ import java.util.List;
 import java.util.Scanner;
 
 public class CourseListingScraper {
+    private static final boolean TEST = false;
+
     public static void main(String[] args) throws Exception {
+        String domain = TEST ? "http://localhost:3000" : "https://aggie-scheduler.mybluemix.net";
+
         Scanner kb = new Scanner(System.in);
 
         try (final WebClient webClient = new WebClient()) {
@@ -51,13 +55,39 @@ public class CourseListingScraper {
             String termTitle = currentTerm.getText();
 
             WebRequest requestSettings1 = new WebRequest(
-                    new URL("https://aggie-scheduler.mybluemix.net/api/term"), HttpMethod.POST);
+                    new URL(domain + "/api/term"), HttpMethod.POST);
             requestSettings1.setRequestParameters(new ArrayList());
             requestSettings1.getRequestParameters().add(new NameValuePair("term", term));
             requestSettings1.getRequestParameters().add(new NameValuePair("name", termTitle));
             Page page1 = webClient.getPage(requestSettings1);
 
             page = termForm.getInputByValue("Submit").click();
+
+            // Accept Terms of Use
+            if (page.getTitleText().equals("Student Terms of Use")) {
+                HtmlForm stouForm = page.getForms().get(1);
+                page = stouForm.getInputByValue("I AGREE").click();
+            }
+
+            // Verify Location
+            if (page.getTitleText().equals("Student Location Selection")) {
+                HtmlForm locationForm1 = page.getForms().get(1);
+                HtmlForm locationForm2 = page.getForms().get(2);
+                HtmlSelect stateSelect = locationForm1.getSelectByName("stat");
+                String selectedState = stateSelect.getSelectedOptions().get(0).getValueAttribute();
+                System.out.println("State selected: " + selectedState);
+
+                HtmlSelect countrySelect = locationForm2.getSelectByName("country");
+                String selectedCountry = countrySelect.getSelectedOptions().get(0).getValueAttribute();
+                System.out.println("Country selected: " + selectedCountry);
+
+                if (selectedState.equals("TX") && selectedCountry.equals("US")) {
+                    page = locationForm2.getInputByValue("Submit and Proceed to Class Schedule").click();
+                } else {
+                    System.err.println("Location not properly set");
+                    return;
+                }
+            }
 
             // Select Subject
             HtmlForm subjectsForm = page.getForms().get(1);
@@ -111,7 +141,7 @@ public class CourseListingScraper {
                     file.write(specificCourses.toString());
                 }
                 WebRequest requestSettings2 = new WebRequest(
-                        new URL("https://aggie-scheduler.mybluemix.net/api/courses"), HttpMethod.POST);
+                        new URL(domain + "/api/courses"), HttpMethod.POST);
                 requestSettings2.setRequestParameters(new ArrayList());
                 requestSettings2.getRequestParameters().add(new NameValuePair("term", term));
                 requestSettings2.getRequestParameters().add(new NameValuePair("courses", specificCourses.toString()));
@@ -125,7 +155,7 @@ public class CourseListingScraper {
                 file.write(subjects.toString());
             }
             WebRequest requestSettings3 = new WebRequest(
-                    new URL("https://aggie-scheduler.mybluemix.net/api/subjects"), HttpMethod.POST);
+                    new URL(domain + "/api/subjects"), HttpMethod.POST);
             requestSettings3.setRequestParameters(new ArrayList());
             requestSettings3.getRequestParameters().add(new NameValuePair("term", term));
             requestSettings3.getRequestParameters().add(new NameValuePair("subjects", subjects.toString()));

@@ -18,7 +18,11 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class GradeHistoryScraper {
+    private static final boolean TEST = false;
+
     public static void main(String[] args) throws Exception {
+        String domain = TEST ? "http://localhost:3000" : "https://aggie-scheduler.mybluemix.net";
+
         Scanner kb = new Scanner(System.in);
 
         try (final WebClient webClient = new WebClient()) {
@@ -33,14 +37,14 @@ public class GradeHistoryScraper {
             System.out.println("\nSELECT TERM:");
             for (int i = 0; i < yearSelect.getOptionSize() * 3; i += 3) {
                 HtmlOption t = yearSelect.getOption(i / 3);
-                System.out.println("[" + i + "] " + t.getText() + " Spring");
+                System.out.println("[" + i + "] " + t.getText() + " Fall");
                 System.out.println("[" + (i + 1) + "] " + t.getText() + " Summer");
-                System.out.println("[" + (i + 2) + "] " + t.getText() + " Fall");
+                System.out.println("[" + (i + 2) + "] " + t.getText() + " Spring");
             }
 
             int choice = kb.nextInt();
             int year = Integer.parseInt(yearSelect.getOption(choice / 3).getValueAttribute());
-            int semester = (choice % 3) + 1;
+            int semester = 3 - (choice % 3);
 
             JSONObject termGrades = new JSONObject();
 
@@ -72,8 +76,7 @@ public class GradeHistoryScraper {
 
             System.out.println("POSTING TERM: " + year + semester);
 
-//            WebRequest requestSettings = new WebRequest(new URL("https://aggie-scheduler.mybluemix.net/api/grades"), HttpMethod.POST);
-            WebRequest requestSettings = new WebRequest(new URL("http://localhost:3000/api/grades"), HttpMethod.POST);
+            WebRequest requestSettings = new WebRequest(new URL(domain + "/api/grades"), HttpMethod.POST);
 
             int counter = 0;
             JSONObject termGradesSubset = new JSONObject();
